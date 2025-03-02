@@ -56,12 +56,16 @@ osThreadId ReadGyroSensorHandle;
 
 /* USER CODE BEGIN PV */
 
-uint8_t start_run = 0;
+#define STOP_CAR 0
+#define RUN_CAR 1
+
 volatile uint16_t analog_val[10];
 uint8_t but_mode = 0;
 uint8_t but_select = 0;
 uint8_t cnt_mode = 0;
 uint8_t cnt_select = 0;
+uint8_t start_car = 0;
+
 
 		uint8_t data_gyro[6];
 		volatile int16_t x_gyro;
@@ -132,10 +136,10 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
+	MX_ADC1_Init();
   MX_TIM2_Init();
   MX_TIM4_Init();
   MX_I2C1_Init();
-  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 	
 	HAL_TIM_PWM_Start (&htim2, TIM_CHANNEL_1);
@@ -252,57 +256,6 @@ int main(void)
 		y_acc = ((int16_t)data_gyro[2] << 8) + data_gyro[3];
 		z_acc = ((int16_t)data_gyro[4] << 8) + data_gyro[5];
 		HAL_Delay(10);
-		*/
-		
-		/*
-		if (selCount % 2 == 1) {
-			mStop();
-			if ((uint32_t)(HAL_GetTick() - ledTime) > 400) {
-				ledTime = HAL_GetTick();
-				HAL_GPIO_TogglePin(ledPC13_GPIO_Port, ledPC13_Pin);
-			}
-		} 
-		
-		else if (selCount % 2 == 0 && selCount > 0) {
-			if (modCount == 0)
-				mStop();
-			else if (modCount == 1)
-				mForward();
-			else if (modCount == 2)
-				mBackward();
-			else if (modCount == 3)
-				mLeft();
-			else if (modCount == 4)
-				mRight();
-			
-			loop_7seg();
-		}
-		
-		modState = HAL_GPIO_ReadPin(MODE_GPIO_Port, MODE_Pin);
-		selState = HAL_GPIO_ReadPin(SELECT_GPIO_Port, SELECT_Pin);
-		
-		if (selState == 0 && selStatePre == 0) {
-			selStatePre = 1;
-			selCount++;
-			if (selCount % 2 == 0)
-				HAL_GPIO_WritePin(ledPC13_GPIO_Port, ledPC13_Pin, GPIO_PIN_RESET);
-		} else if (selState == 1) selStatePre = 0;
-		
-		if(modState == 0 && modStatePre == 0) {
-			bzEnable();
-			modStatePre = 1;
-			if (selCount % 2 == 1)
-				modCount++;
-			if (modCount >= 5)
-				modCount = 0;
-				
-			Show_7Seg(modCount);
-		} else if (modState == 1) modStatePre = 0;
-		
-		if (bzState == 1 && bzTime < HAL_GetTick()) {
-			bzState = 0;
-			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, bzState);	
-		}
 		*/
 		
   }
@@ -437,7 +390,6 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_5;
   sConfig.Rank = ADC_REGULAR_RANK_6;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -447,7 +399,6 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_6;
   sConfig.Rank = ADC_REGULAR_RANK_7;
-  sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -788,6 +739,8 @@ void Write_IO_PWM(void const * argument)
   /* Infinite loop */
   for(;;)
   {
+		if (analog_val[5] <= 1000)
+			start_car = RUN_CAR;
     osDelay(1);
   }
   /* USER CODE END 5 */
@@ -806,7 +759,8 @@ void Read_Analog_Ssr(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+		HAL_ADC_Start_DMA(&hadc1, (uint32_t*)analog_val, 10);
+    osDelay(5);
   }
   /* USER CODE END Read_Analog_Ssr */
 }
@@ -824,6 +778,11 @@ void Read_Gyro_Ssr(void const * argument)
   /* Infinite loop */
   for(;;)
   {
+		read_button();
+		if (cnt_select > 1 && cnt_select % 2 == 0) {
+			loop_7seg();
+			operating_mode();
+		}
     osDelay(1);
   }
   /* USER CODE END Read_Gyro_Ssr */
