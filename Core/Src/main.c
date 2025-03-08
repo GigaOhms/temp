@@ -53,7 +53,6 @@ TIM_HandleTypeDef htim4;
 osThreadId WriteGPIO_PWMHandle;
 osThreadId ReadAnalogSensoHandle;
 osThreadId ReadGyroSensorHandle;
-
 /* USER CODE BEGIN PV */
 
 #define STOP_CAR 0
@@ -136,10 +135,10 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-	MX_ADC1_Init();
   MX_TIM2_Init();
   MX_TIM4_Init();
   MX_I2C1_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 	
 	HAL_TIM_PWM_Start (&htim2, TIM_CHANNEL_1);
@@ -238,7 +237,7 @@ int main(void)
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
-  osKernelStart();	// ------------------------------------ uncomment ------------------------
+  osKernelStart();
 
   /* We should never get here as control is now taken by the scheduler */
 
@@ -454,7 +453,7 @@ static void MX_I2C1_Init(void)
   hi2c1.Instance = I2C1;
   hi2c1.Init.ClockSpeed = 100000;
   hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
-  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.OwnAddress1 = 36;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
   hi2c1.Init.OwnAddress2 = 0;
@@ -760,7 +759,7 @@ void Read_Analog_Ssr(void const * argument)
   for(;;)
   {
 		HAL_ADC_Start_DMA(&hadc1, (uint32_t*)analog_val, 10);
-    osDelay(5);
+    osDelay(1);
   }
   /* USER CODE END Read_Analog_Ssr */
 }
