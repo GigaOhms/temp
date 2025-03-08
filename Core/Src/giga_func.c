@@ -6,6 +6,12 @@
 #include <stdlib.h>
 
 
+#define KP_PID	10
+#define KI_PID	5
+#define KD_PID	5
+#define Kspeed	140
+#define THD			100
+
 #define IN_LINE 0
 #define OUT_LINE 1
 #define STOP_LINE 2
@@ -153,33 +159,33 @@ void calc_speed(int Kp, int Ki, int Speed) {
 
 void calc_PID(int Kp, int Ki, int Kd, int Speed) {
   // SS1	
-	if(analog_val[8] >= 200) 																							{current_err = 6; line_status = IN_LINE;}	
+	if(analog_val[8] >= THD) 																								{current_err = 6; line_status = IN_LINE;}	
 	// SS1 SS2
-	if(analog_val[8] >= 200 && analog_val[7] >= 200)  {current_err = 5; line_status = IN_LINE;}	
+	if(analog_val[8] >= THD && analog_val[7] >= THD)  										{current_err = 5; line_status = IN_LINE;}	
 	// SS2
-	if(analog_val[7] >= 200  )                                           {current_err = 4; line_status = IN_LINE;}
+	else if(analog_val[7] >= THD  )                                           {current_err = 4; line_status = IN_LINE;}
 	// SS2 SS3
-  if(analog_val[7] >= 200)  {current_err = 3; line_status = IN_LINE;}		
+  if(analog_val[7] >= THD && analog_val[6] >= THD)  										{current_err = 3; line_status = IN_LINE;}		
 	//SS3
-	if(analog_val[6] >= 200)                                            {current_err = 2; line_status = IN_LINE;}
+	else if(analog_val[6] >= THD)                                            {current_err = 2; line_status = IN_LINE;}
 	//SS3 SS4
-	if(analog_val[6] >= 200 && analog_val[4] >= 200)  {current_err = 1; line_status = IN_LINE;}		
+	if(analog_val[6] >= THD && analog_val[4] >= THD)  										{current_err = 1; line_status = IN_LINE;}		
 	// SS4
-	if(analog_val[4] >= 200)                                             {current_err = 0; line_status = IN_LINE;}	
+	else if(analog_val[4] >= THD)                                             {current_err = 0; line_status = IN_LINE;}	
 	// SS4 SS5 
-	if(analog_val[4] >= 200 && analog_val[3] >= 200)  {current_err = -1;line_status = IN_LINE;}			
+	if(analog_val[4] >= THD && analog_val[3] >= THD)  										{current_err = -1;line_status = IN_LINE;}			
 	// SS5
-	if(analog_val[3] >= 200)                                             {current_err = -2;line_status = IN_LINE;}	
+	else if(analog_val[3] >= THD)                                             {current_err = -2;line_status = IN_LINE;}	
 	// SS5 SS6
-	if(analog_val[3] >= 200 && analog_val[2] >= 200)  {current_err = -3;line_status = IN_LINE;}				
+	if(analog_val[3] >= THD && analog_val[2] >= THD)  										{current_err = -3;line_status = IN_LINE;}				
 	// SS6
-	if(analog_val[2] >= 200)                                             {current_err = -4;line_status = IN_LINE;}
+	else if(analog_val[2] >= THD)                                             {current_err = -4;line_status = IN_LINE;}
   // SS6 SS7
-	if(analog_val[2] >= 200 && analog_val[1] >= 200)  {current_err = -5;line_status = IN_LINE;}				
+	if(analog_val[2] >= THD && analog_val[1] >= THD)  										{current_err = -5;line_status = IN_LINE;}				
 	// SS7
-	if(analog_val[1] >= 200)                                             {current_err = -6;line_status = IN_LINE;}
+	else if(analog_val[1] >= THD)                                             {current_err = -6;line_status = IN_LINE;}
 	 
-	if(analog_val[1] < 100 && analog_val[4] < 100 && analog_val[8] < 100 && analog_val[2] < 100 && analog_val[3] < 100 && analog_val[6] < 100 && analog_val[7] < 100)   {line_status = OUT_LINE;}
+	if(analog_val[1] < THD && analog_val[4] < THD && analog_val[8] < THD && analog_val[2] < THD && analog_val[3] < THD && analog_val[6] < THD && analog_val[7] < THD)   {line_status = OUT_LINE;}
 	
   real_cal = Kp * current_err + Kd * (current_err - last_err);
 	last_err = current_err;
@@ -251,7 +257,7 @@ void operating_mode(void) {
 			break;
 		}
 		case 1: {
-			calc_PID(10, 2, 5, 150);
+			calc_PID(KP_PID, KI_PID, KD_PID, Kspeed);
 			break;
 		}
 		case 2: {
